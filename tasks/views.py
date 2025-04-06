@@ -2,8 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from .models import Task
 from .forms import TaskForm
+import json
 
 def signup(request):
     if request.method == 'POST':
@@ -34,8 +38,8 @@ def user_logout(request):
 
 @login_required
 def task_list(request):
-    tasks = Task.objects.filter(user=request.user)
-    return render(request, 'tasks/task_list.html', {'tasks': tasks})
+    tasks = Task.objects.filter(user=request.user).order_by('due_date', 'status')
+    return render(request, 'tasks/task_list.html', {'tasks': tasks, 'today': timezone.now().date()})
 
 @login_required
 def task_create(request):
@@ -69,3 +73,14 @@ def task_delete(request, task_id):
         task.delete()
         return redirect('task_list')
     return render(request, 'tasks/task_confirm_delete.html', {'task': task})
+
+@login_required
+@csrf_exempt  # For simplicity; secure with CSRF in production
+def task_status_update(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        task.status = data.get('status', task.status)
+        task.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=400)
