@@ -4,15 +4,22 @@
 <head>
     <title>Task Manager</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/task_status.js' %}"></script>
 </head>
 <body>
     <h2>Welcome, {{ user.username }}!</h2>
     <a href="{% url 'task_create' %}">Add New Task</a> | <a href="{% url 'logout' %}">Log Out</a>
     <h3>Your Tasks</h3>
+    <!-- Add CSRF token in a hidden form -->
+    <form method="post" style="display:none;">
+        {% csrf_token %}
+    </form>
     <ul>
     {% for task in tasks %}
-        <li>
-            {{ task.title }} (Due: {{ task.due_date|date:"Y-m-d" }})
+        <li class="{% if task.status == 'COMPLETED' %}completed{% endif %} {% if task.due_date and task.due_date < today %}overdue{% endif %}">
+            <input type="checkbox" class="task-status" data-task-id="{{ task.id }}"
+                   {% if task.status == 'COMPLETED' %}checked{% endif %}>
+            {{ task.title }} (Due: {{ task.due_date|date:"Y-m-d" }} - {{ task.get_status_display }})
             <a href="{% url 'task_update' task.id %}">Edit</a>
             <a href="{% url 'task_delete' task.id %}">Delete</a>
         </li>
