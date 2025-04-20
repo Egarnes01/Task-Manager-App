@@ -21,3 +21,10 @@ button:hover {
 .overdue {
     color: red;
 }
+.completed {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+.overdue {
+    color: #dc3545;
+}

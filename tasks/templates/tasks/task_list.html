@@ -1,30 +1,53 @@
-{% load static %}
+{% load static django_bootstrap5 %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Task Manager</title>
+    {% bootstrap_css %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/task_status.js' %}"></script>
 </head>
 <body>
-    <h2>Welcome, {{ user.username }}!</h2>
-    <a href="{% url 'task_create' %}">Add New Task</a> | <a href="{% url 'logout' %}">Log Out</a>
-    <h3>Your Tasks</h3>
-    <form method="post" style="display:none;">
-        {% csrf_token %}
-    </form>
-    <ul>
-    {% for task in tasks %}
-        <li class="{% if task.status == 'COMPLETED' %}completed{% endif %} {% if task.due_date and task.due_date < today %}overdue{% endif %}">
-            <input type="checkbox" class="task-status" data-task-id="{{ task.id }}"
-                   {% if task.status == 'COMPLETED' %}checked{% endif %}>
-            {{ task.title }} (Due: {{ task.due_date|date:"Y-m-d" }} - <span class="status-text">{{ task.get_status_display }}</span>)
-            <a href="{% url 'task_update' task.id %}">Edit</a>
-            <a href="{% url 'task_delete' task.id %}">Delete</a>
-        </li>
-    {% empty %}
-        <li>No tasks yet.</li>
-    {% endfor %}
-    </ul>
+    <div class="container mt-4">
+        <h2>Welcome, {{ user.username }}!</h2>
+        <div class="mb-3">
+            <a href="{% url 'task_create' %}" class="btn btn-primary">Add New Task</a>
+            <a href="{% url 'logout' %}" class="btn btn-secondary">Log Out</a>
+        </div>
+        <h3>Your Tasks</h3>
+        <form method="post" style="display:none;">
+            {% csrf_token %}
+        </form>
+        <!-- Filtering Form -->
+        <form method="get" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="TODO" {% if request.GET.status == 'TODO' %}selected{% endif %}>To Do</option>
+                        <option value="IN_PROGRESS" {% if request.GET.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                        <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-primary">Filter</button>
+                </div>
+            </div>
+        </form>
+        <ul class="list-group">
+        {% for task in tasks %}
+            <li class="list-group-item {% if task.status == 'COMPLETED' %}completed{% endif %} {% if task.due_date and task.due_date < today %}overdue{% endif %}">
+                <input type="checkbox" class="task-status" data-task-id="{{ task.id }}"
+                       {% if task.status == 'COMPLETED' %}checked{% endif %}>
+                {{ task.title }} (Due: {{ task.due_date|date:"Y-m-d" }} - <span class="status-text">{{ task.get_status_display }}</span>)
+                <a href="{% url 'task_update' task.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                <a href="{% url 'task_delete' task.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No tasks yet.</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% bootstrap_javascript %}
 </body>
 </html>

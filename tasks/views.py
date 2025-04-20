@@ -75,7 +75,6 @@ def task_delete(request, task_id):
     return render(request, 'tasks/task_confirm_delete.html', {'task': task})
 
 @login_required
-@csrf_exempt  # For simplicity; secure with CSRF in production
 def task_status_update(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
     if request.method == 'POST':
@@ -84,3 +83,12 @@ def task_status_update(request, task_id):
         task.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False}, status=400)
+
+@login_required
+def task_list(request):
+    tasks = Task.objects.filter(user=request.user)
+    status_filter = request.GET.get('status')
+    if status_filter:
+        tasks = tasks.filter(status=status_filter)
+    tasks = tasks.order_by('due_date', 'status')
+    return render(request, 'tasks/task_list.html', {'tasks': tasks, 'today': timezone.now().date()})
